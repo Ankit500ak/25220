@@ -65,8 +65,15 @@ app.post('/shorturls', (req, res) => {
     }
   }
 
-  const expiry = new Date(Date.now() + minutes * 60 * 1000);
-  store.set(code, { url, expiry });
+  const now = new Date();
+  const expiry = new Date(now.getTime() + minutes * 60 * 1000);
+  store.set(code, {
+    url,
+    expiry,
+    createdAt: now,
+    clickCount: 0,
+    clicks: [] // { timestamp, referrer, geo }
+  });
 
   const host = req.get('host') || `localhost:${port}`;
   const protocol = req.protocol || 'http';
@@ -85,7 +92,41 @@ app.get('/:shortcode', (req, res) => {
     store.delete(shortcode);
     return res.status(410).json({ error: 'Shortcode expired' });
   }
+
+  // Track click details
+  record.clickCount = (record.clickCount || 0) + 1;
+  const click = {
+    timestamp: new Date(),
+    referrer: req.get('referer') || null,
+    // For geo, use IP address (coarse, not accurate, but demo):
+    geo: req.ip || req.connection?.remoteAddress || null
+  };
+  record.clicks = record.clicks || [];
+  record.clicks.push(click);
+
   res.redirect(record.url);
+});
+// GET /shorturls/:shortcode - statistics endpoint
+app.get('/shorturls/:shortcode', (req, res) => {
+  const { shortcode } = req.params;
+  if (!shortcode) return res.status(400).json({ error: 'Missing shortcode' });
+
+  const record = store.get(shortcode);
+  if (!record) return res.status(404).json({ error: 'Shortcode not found' });
+
+  const stats = {
+    shortcode,
+    url: record.url,
+    createdAt: record.createdAt,
+    expiry: record.expiry,
+    clickCount: record.clickCount || 0,
+    clicks: (record.clicks || []).map(c => ({
+      timestamp: c.timestamp,
+      referrer: c.referrer,
+      geo: c.geo
+    }))
+  };
+  res.json(stats);
 });
 
 app.use((req, res) => {
