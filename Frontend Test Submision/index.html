@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>URL Shortener</title>
+    
+     </head>
+  <body>
+    <div id="root">Loading...</div>
+    <noscript>
+      <div style="padding:20px;background:#fff3f2;color:#7f1d1d;margin:12px;border-radius:6px;">
+        This app requires JavaScript. Please enable JavaScript in your browser.
+      </div>
+    </noscript>
+    <!-- Use a relative path so opening index.html directly also works (if needed) -->
+    <script type="module" src="./src/main.jsx"></script>
+    <script>
+     
+      setTimeout(() => {
+        const root = document.getElementById('root')
+        if (root && root.innerHTML.trim() === 'Loading...') {
+          root.innerHTML = '<div style="padding:20px;border-radius:8px;background:#fff;color:#0b1220">Unable to load app. If you opened this file directly, start the dev server with <code>npm run dev</code> and open the provided URL.</div>'
+        }
+      }, 1200)
+    </script>
+  </body>
+</html>
